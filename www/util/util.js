@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const Jimp = require("jimp");
+const axios_1 = __importDefault(require("axios"));
 // filterImageFromURL
 // helper function to download, filter, and save the filtered image locally
 // returns the absolute path to the local image
@@ -24,8 +25,14 @@ function filterImageFromURL(inputURL) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const photo = yield Jimp.read(inputURL);
-                const outpath = '/tmp/filtered.' + Math.floor(Math.random() * 2000) + '.jpg';
+                const photo = yield axios_1.default({
+                    method: "get",
+                    url: inputURL,
+                    responseType: "arraybuffer",
+                }).then(function ({ data: imageBuffer }) {
+                    return Jimp.read(imageBuffer);
+                });
+                const outpath = "/tmp/filtered." + Math.floor(Math.random() * 2000) + ".jpg";
                 yield photo
                     .resize(256, 256) // resize
                     .quality(60) // set JPEG quality
@@ -35,15 +42,7 @@ function filterImageFromURL(inputURL) {
                 });
             }
             catch (error) {
-                const photo = yield Jimp.read(inputURL);
-                const outpath = '/tmp/filtered.' + Math.floor(Math.random() * 2000) + '.jpg';
-                yield photo
-                    .resize(256, 256) // resize
-                    .quality(60) // set JPEG quality
-                    .greyscale() // set greyscale
-                    .write(__dirname + outpath, (img) => {
-                    resolve(__dirname + outpath);
-                });
+                reject(error);
             }
         }));
     });
